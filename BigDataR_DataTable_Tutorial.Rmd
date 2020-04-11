@@ -37,7 +37,7 @@ What version of R should I be using? Ideally, you're using 64-bit because you're
  * Linux: See [here.](http://www.howtogeek.com/198615/how-to-check-if-your-linux-system-is-32-bit-or-64-bit/)
  
 Compare this to the info you get from running the `sessionInfo()` function in R. If your computer is 64-bit, and your R version is 32-bit, download the 64-bit version! 
-```{r 32-bit or 64-bit}
+```{r 32-bit or 64-bit, echo = T, results = 'hide'}
 sessionInfo()
 ```
 
@@ -77,7 +77,7 @@ library(tidyverse)
 
 To start off, let's load a CSV. To begin to build the narrative of "`data.table` is wicked fast," we will make a giant matrix and then save it as a giant CSV. We will then read it into R both as a DF and a DT and compare system time for each way of reading the csv. We use the `system.time()` function to see how long it takes for an operation to complete.
 
-```{r import CSV speed comparison}
+```{r import CSV speed comparison, echo = T, results = 'hide'}
 # Create a large .csv file
 set.seed(100) #initiate random sampling at 100
 m <- data.frame(matrix( #make a data frame from a matrix
@@ -113,9 +113,9 @@ You can convert any DF into a DT using:
 * `as.data.table()`: makes a new object of alternate structure, and leaves the original object (not a data frame or list) in your environment
 * `setDF()`: converts DF to DT in place, you won't have to assign DT to new object. If you plan to delete the original data frame anyway, this function saves you a step.
 
-*To play around wtih `data.table` we will use data on Boston Housing from the [`mlbench` package](https://cran.r-project.org/web/packages/mlbench/index.html). 
+*To play around wtih `data.table` we will use data on Boston Housing from the [`mlbench` package](https://cran.r-project.org/web/packages/mlbench/index.html). Each row gives statistics about a census tract from 1970 Boston census. 
 
-```{r converting DF to DT}
+```{r converting DF to DT, echo = T, results = 'hide'}
 #install.packages("mlbench")
 library(mlbench)
 data("BostonHousing2") #BostonHousing2 is a data frame within mlbench (library(help = "mlbench") to see all datasets in this package)
@@ -147,7 +147,7 @@ The syntax for `data.tables` is more similar to SQL.
 #![syntax](syntax.png)
 
 Subsetting rows using `i`.
-```{r subsetting rows}
+```{r subsetting rows, echo = T, results = 'hide'}
 #unlike in DFs, we do NOT need to prefix column names with DT$, rather they can be called as variables
 bostonhousing_dt[town == "Boston Back Bay" & chas == "1",] #this function works with or without the final comma, but in DFs, you would NEED both bostonhousing_dt$ AND the comma
 
@@ -158,13 +158,13 @@ first <- bostonhousing_dt[1:3] #get first 3 rows
 ```
 
 We can use `data.table` to quickly sort rows using `data.table::order()` which is faster than `base::order().`
-```{r sorting rows}
+```{r sorting rows, echo = T, results = 'hide'}
 #sort bostonhousing_dt by ascending number of rooms per dwelling, and then by descending property tax rate
 ans <- bostonhousing_dt[order(rm, -tax)]
 ```
 
 Selecting columns in `j`.
-```{r selecting columns using j}
+```{r selecting columns using j, echo = T, results = 'hide'}
 bostonhousing_dt[,age] #unlike DFs, no need for quotes! We wanted all the rows, so we skipped `i`, and began with a comma (similar to data frame syntax). Note this function returns a vector.
 
 #But I want a data table! Then, we have to wrap the variable in a list.
@@ -183,14 +183,14 @@ In addition to *selecting* columns, we can use 'j' to *compute* on columns.
 
 What if we wanted to see how many rows satisfy a condition based on column values?
 
-```{r compute with j}
+```{r compute with j, echo = T, results = 'hide'}
 #How many census tracts have a median value of owner-occupied homes greater than $20,000 in 1970?
 bostonhousing_dt[, sum((cmedv*1000 ) > 20000)]
 ```
 
 We can use `data.table` to create a new column from existing columns.
 
-```{r new columns from existing}
+```{r new columns from existing, echo = T, results = 'hide'}
 bostonhousing_dt[, lstat_b := lstat * b] # := is the assignment by reference symbol in data table
 
 #multiple new columns at once, use ':=' (note quotes)
@@ -206,13 +206,13 @@ bostonhousing_dt[, age_rms := mean(age), by = rm] #Assign avg age for tracts gro
 ```
 
 Can we delete this column we just made?
-```{r delete column}
+```{r delete column, echo = T, results = 'hide'}
 bostonhousing_dt[, age_rms := NULL]
 ```
 
 One unique aspect of `data.table` is that you can modify data tables without making a new object. This modification will also occur in any objects made from that original data table. Often this is helpful. However, sometimes you don't want to modify the original object, or for linked modifications to occur. In this case, we must use the `copy()` function. Any subsequent update by reference operations performed on the copied object will not affect the original object. 
 
-```{r copy to not rewrite original}
+```{r copy to not rewrite original, echo = T, results = 'hide'}
 bostonhousing_dt_n <- names(bostonhousing_dt)
 bostonhousing_dt_n
 
@@ -234,7 +234,7 @@ bostonhousing_dt_n
 
 
 Grouping in data.table
-```{r grouping}
+```{r grouping, echo = T, results = 'hide'}
 #Mean pupil-teacher ratio by avg number of rooms in census tract
 bostonhousing_dt[, .(mean_ptratio = mean(ptratio)), by = rm] #we want to know the mean value for mileage across each cylinder group
 
@@ -248,7 +248,7 @@ bostonhousing_dt[, .N, .(rm > 4, age > 50)]
 ```
 
 We can also subset in `i` (rows), and then do/compute in `j` (columns)
-```{r subset rows compute columns}
+```{r subset rows compute columns, echo = T, results = 'hide'}
 #For census tracts with crime rates per capita below .1 that are on the Charles, what's the mean percentage of lower status of population and pupil teacher ratio?
 bostonhousing_dt[crim < 0.1 & chas == 1, .(m_lstat = mean(lstat), m_ptratio = mean(ptratio))] 
 
@@ -260,7 +260,7 @@ Because the three main components of the query (i, j and by) are together inside
 * .N is an integer containing the number of rows in a group. If no groups are specified, it defaults to all rows in your DT. 
 * .I is used as an index, for each item it holds the item's row location
 
-```{r .N and .I}
+```{r .N and .I, echo = T, results = 'hide'}
 #How many census tracts are there on and off the Charles River?
 bostonhousing_dt[, .N, by = chas]
 
@@ -276,7 +276,7 @@ summary(bostonhousing_dt$nox)
 ```
 
 Chaining is really the bread and butter of the streamlining possible when coding with data tables. You can perform multiple `data.table` operations one after the other without having to store the intermediate results. This is really helpful when you're working with big data!
-```{r chaining}
+```{r chaining, echo = T, results = 'hide'}
 #take multiple means grouped by town (first bracket), and then put rows produced in ascending order by # town (second bracket)
 output <- bostonhousing_dt[, .(mean_rm=mean(rm), #mean average number of rooms per dwelling
                      mean_nox=mean(nox), #mean nitric oxides concentration 
@@ -286,7 +286,7 @@ output <- bostonhousing_dt[, .(mean_rm=mean(rm), #mean average number of rooms p
 
 Our next goal is to compute the mean of all the variables grouped by 'town.' Here, that may be managable to type it all out, but, alternatively we can write a function. To write functions within a data.table bracket, we use `lapply()` and .SD. `laaply()` applies a function over a list or vector. What about the .SD object? .SD is a data.table that contains **S**ubsets of x's **D**ata for each group EXCEPT the column specified in 'by' argument. 
 
-```{r .SD example}
+```{r .SD example, echo = T, results = 'hide'}
 bostonhousing_dt[, .SD, by = town]
 
 #we can now pass this as the first argument in `lapply()`.
@@ -323,7 +323,7 @@ Keys:
   * physically reorder rows by the columns provided by the key, in increasing order
   * marks key columns by setting attribute called `sorted` to `data.table`
 
-```{r setting keys}
+```{r setting keys, echo = T, results = 'hide'}
 setkey(bostonhousing_dt, tract) #internally sorts bostonhousing_dt by tract
 
 #hmmm, what if you already forgot if you have set a key?
@@ -356,7 +356,7 @@ output <- bostonhousing_dt[, .(mean_rm=mean(rm),
 ```
 
 Joining 2+ data tables is easy and fast, because data.table::merge() is faster than base::merge().
-```{r joining data tables}
+```{r joining data tables, echo = T, results = 'hide'}
 dt1 <- bostonhousing_dt[5:25,.(tract, b, rad)]
 dt2 <- bostonhousing_dt[1:10, .(tract, tax)]
 dt3 <- bostonhousing_dt[2:12, .(tract, town)]
@@ -386,7 +386,7 @@ dt_merged <- Reduce(merge_func, dt_list) #reduce takes in a function that has to
 
 To quickly assigning values to a new column using `data.frame`, we use the `set()` command. The syntax is `set(dt, i, j, value)`, where i is row # and j is column #. `set` is a low-overhead loop-able version of := which we used above. It is particularly useful for repetively updating rows of certain columns by reference (using a for-loop). 
 
-```{r quickly assigning values to new column}
+```{r quickly assigning values to new column, echo = T, results = 'hide'}
 
 #directly from R documentation
 
