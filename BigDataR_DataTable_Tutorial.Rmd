@@ -41,7 +41,7 @@ Compare this to the info you get from running the `sessionInfo()` function in R.
 sessionInfo()
 ```
 
-Another step to take if you encounter problems with analyses (most often the dreaded `Error: vector memory exhausted (limit reached?)`), is to reallocate more of your memory to R. I can't offer too much guidance as I've never needed to do this. Techniques for how to do this depend on your operating system, so if you want to explore this option, I suggest a google search of "How to reallocate more memory to R in *(Linux, Macintosh, Windows)". Take caution though re-allocating pre-assigned memory can cause your computer to crash if not done correctly. 
+Another step to take if you encounter problems with analyses (most often the dreaded `Error: vector memory exhausted (limit reached?)`), is to reallocate more of your memory to R. I can't offer too much guidance as I've never needed to do this. Techniques for how to do this depend on your operating system, so if you want to explore this option, I suggest a google search of "How to reallocate more memory to R in *(Linux, Macintosh, Windows)". Take caution though, as re-allocating pre-assigned memory can cause your computer to crash if not done correctly. 
 
 *************
 ##`data.table` package in R
@@ -101,7 +101,7 @@ system.time({m_dt <- fread('m2.csv')})
    #user  system elapsed 
   #0.550   0.249   1.181 
 
-#FYI: 'user time' is CPU time to execute process; 'system time' is the CPU time charged for execution by the system on behalf of the current process (opening files, etc.); 'elapsed time' is wall clock time, what did you experience?
+#FYI: 'user time' is CPU (central processing unit) time to execute process; 'system time' is the CPU time charged for execution by the system on behalf of the current process (opening files, etc.); 'elapsed time' is wall clock time, what did you experience?
 ```
 
 Wow! Using data.table::fread() was ~80x faster than read.csv() from base R, and ~8x faster than read_csv() from the tidyverse. Hopefully you are now starting to believe me when I say `data.table` is the queen of big data.
@@ -116,7 +116,7 @@ You can convert any DF into a DT using:
 *To play around wtih `data.table` we will use data on Boston Housing from the [`mlbench` package](https://cran.r-project.org/web/packages/mlbench/index.html). Each row gives statistics about a census tract from 1970 Boston census. 
 
 ```{r converting DF to DT, echo = T, results = 'hide'}
-#install.packages("mlbench")
+#install.packages("mlbench") #unhash if you don't have this package yet
 library(mlbench)
 data("BostonHousing2") #BostonHousing2 is a data frame within mlbench (library(help = "mlbench") to see all datasets in this package)
 ?BostonHousing2 #to see what column names mean
@@ -131,9 +131,9 @@ bostonhousing_dt <- as.data.table(BostonHousing2) #using this function keeps the
 
 class(bostonhousing_dt)
 
-#Our new object is both a data.table and data.frame, and therefore, any functions we use on data frames we can still use on our data.table. However, we now have a whole new suite of functions we can use on our data.table that we could NOT use on our O.G. data frame
+#Our new object is both a data.table and data.frame, and therefore, any functions we use on data frames we can still use on our data.table. However, we now have a whole new suite of functions we can use on our data.table that we could NOT use on our O.G. data frame BostonHousing2
 
-#another handy trick about data.table is that when you view a data.table and the # of rows exceeds the global option (100 rows), it automatically prints the first 5 and last 5 rows. this is a major yet underrated perk over data frames. Try it out in your console! (Will look the same in this markdown script)
+#another handy trick about data.table is that when you view a data.table and the # of rows exceeds the global option (100 rows), it automatically prints the first 5 and last 5 rows. this is a major yet underrated perk over data frames. Copy and paste names into your console to try it out! (Will look the same in this markdown script)
 BostonHousing2
 bostonhousing_dt
 ```
@@ -146,13 +146,19 @@ The syntax for `data.tables` is more similar to SQL.
 
 #![syntax](syntax.png)
 
+*Text below will be ugly in markdown, but I was too lazy to figure out how to get spacing to transfer... see image above.*
+In R language this says:               i              j           by
+In SQL language this says:where |order by   select | update group by
+In human language this says: Take `DT`, subset/reorder rows using `i`, then calculate `j`, grouped by `by`
+
+
 Subsetting rows using `i`.
 ```{r subsetting rows, echo = T, results = 'hide'}
 #unlike in DFs, we do NOT need to prefix column names with DT$, rather they can be called as variables
-bostonhousing_dt[town == "Boston Back Bay" & chas == "1",] #this function works with or without the final comma, but in DFs, you would NEED both bostonhousing_dt$ AND the comma
+bostonhousing_dt[town == "Boston Back Bay" & chas == "1",] #this function works with or without the final comma (try it out for yourself), but using DFs, you would NEED both bostonhousing_dt$ AND the comma
 
 #we can also use use row indices to subset rows
-first <- bostonhousing_dt[1:3] #get first 3 rows
+first <- bostonhousing_dt[1:3] #get first 3 rows (again, with or without comma, here I did without)
 
 #above, there is no 'j' or 'by' condition, just a condition for 'i'
 ```
@@ -173,7 +179,7 @@ bostonhousing_dt[,list(age)]
 #We can also use .() as the list wrapper. Same function, fewer keystrokes = win
 bostonhousing_dt[,.(age)]
 
-#what about multiple columns?
+#what about multiple columns? `data.table` has you covered.
 bostonhousing_dt[,.(dis, b, medv)]
 
 
@@ -255,7 +261,7 @@ bostonhousing_dt[crim < 0.1 & chas == 1, .(m_lstat = mean(lstat), m_ptratio = me
 ```
 Because the three main components of the query (i, j and by) are together inside [...], `data.table` can see all three and optimise the query altogether before evaluation, not each separately. By subsetting only for `crim` and `chas`, we improve speed and memory efficiency.
 
-.N and .I are your funny looking `data.table` friends
+**.N and .I are your funny looking `data.table` friends**
 
 * .N is an integer containing the number of rows in a group. If no groups are specified, it defaults to all rows in your DT. 
 * .I is used as an index, for each item it holds the item's row location
@@ -406,6 +412,6 @@ system.time(for (i in 1:10000) set(DT,i,1L,i)) #BUT what if we use set and DT to
 
 There are many nifty tricks `data.table` facilitates that I haven't covered here. The best way to get used to the unique yet streamlined syntax is to practice!
 
-Check out the powerpoint PDF in the repository for additional resources for both big data and for data.table. Don't hesitate to reach out with any questions! 
+Check out the powerpoint PDF in the repository for additional resources for both big data and for `data.table`. Don't hesitate to reach out with any questions! 
 
 *Z Kitchel April 2020*
