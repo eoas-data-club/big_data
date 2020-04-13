@@ -113,7 +113,7 @@ You can convert any DF into a DT using:
 * `as.data.table()`: makes a new object of alternate structure, and leaves the original object (not a data frame or list) in your environment
 * `setDF()`: converts DF to DT in place, you won't have to assign DT to new object. If you plan to delete the original data frame anyway, this function saves you a step.
 
-*To play around wtih `data.table` we will use data on Boston Housing from the [`mlbench` package](https://cran.r-project.org/web/packages/mlbench/index.html). Each row gives statistics about a census tract from 1970 Boston census. 
+*To play around with `data.table` we will use data on Boston Housing from the [`mlbench` package](https://cran.r-project.org/web/packages/mlbench/index.html). Each row gives statistics about a census tract from 1970 Boston census. 
 
 ```{r converting DF to DT, echo = T, results = 'hide'}
 #install.packages("mlbench") #unhash if you don't have this package yet
@@ -152,7 +152,7 @@ In SQL language this says:where |order by   select | update group by
 In human language this says: Take `DT`, subset/reorder rows using `i`, then calculate `j`, grouped by `by`
 
 
-Subsetting rows using `i`.
+Subsetting rows using `i`. **DT[i, j, by]**
 ```{r subsetting rows, echo = T, results = 'hide'}
 #unlike in DFs, we do NOT need to prefix column names with DT$, rather they can be called as variables
 bostonhousing_dt[town == "Boston Back Bay" & chas == "1",] #this function works with or without the final comma (try it out for yourself), but using DFs, you would NEED both bostonhousing_dt$ AND the comma
@@ -160,7 +160,7 @@ bostonhousing_dt[town == "Boston Back Bay" & chas == "1",] #this function works 
 #we can also use use row indices to subset rows
 first <- bostonhousing_dt[1:3] #get first 3 rows (again, with or without comma, here I did without)
 
-#above, there is no 'j' or 'by' condition, just a condition for 'i'
+#above, there is no 'j' or 'by' condition, just a condition for 'i' **DT[i, j, by]**
 ```
 
 We can use `data.table` to quickly sort rows using `data.table::order()` which is faster than `base::order().`
@@ -169,7 +169,7 @@ We can use `data.table` to quickly sort rows using `data.table::order()` which i
 ans <- bostonhousing_dt[order(rm, -tax)]
 ```
 
-Selecting columns in `j`.
+Selecting columns in `j`. **DT[i, j, by]**
 ```{r selecting columns using j, echo = T, results = 'hide'}
 bostonhousing_dt[,age] #unlike DFs, no need for quotes! We wanted all the rows, so we skipped `i`, and began with a comma (similar to data frame syntax). Note this function returns a vector.
 
@@ -185,7 +185,7 @@ bostonhousing_dt[,.(dis, b, medv)]
 
 ```
 
-In addition to *selecting* columns, we can use 'j' to *compute* on columns.
+In addition to *selecting* columns, we can use 'j' to *compute* on columns. **DT[i, j, by]**
 
 What if we wanted to see how many rows satisfy a condition based on column values?
 
@@ -203,10 +203,10 @@ bostonhousing_dt[, lstat_b := lstat * b] # := is the assignment by reference sym
 bostonhousing_dt[,  `:=`(lstat_ptratio = lstat * ptratio,
                          lstat_age = lstat * age)]
 
-#We can also use assignment by reference to replace values conditionally
+#We can also use assignment by reference to replace values conditionally **DT[i, j, by]**
 bostonhousing_dt[age >= 90, cmedv := 0][order(-age)] #if more than 90% of owner-occupied units in census tract were built before 1940, set the corrected median value of owner-occupied homes to 0
 
-#We can also assign values unique to subsets
+#We can also assign values unique to subsets **DT[i, j, by]**
 bostonhousing_dt[, age_rms := mean(age), by = rm] #Assign avg age for tracts grouped by avg number of rooms in homes to each row
 
 ```
